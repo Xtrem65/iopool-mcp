@@ -17,7 +17,19 @@ const IOPOOL_BASE_URL = "https://api.iopool.com/v1";
 // Versions du protocole MCP que ce serveur sait parler. On renvoie celle que
 // le client demande quand on la connaît, sinon la plus ancienne (compatible
 // avec tous les clients).
-const SUPPORTED_PROTOCOL_VERSIONS = ["2024-11-05", "2025-03-26", "2025-06-18"];
+//
+// 2025-11-25 est incluse : ce serveur n'implémente que le socle (initialize,
+// tools/list, tools/call), inchangé depuis 2024-11-05, et sa découverte OAuth
+// suit déjà la RFC 9728 avec PKCE S256 exigé par cette révision.
+// 2026-07-28 n'est volontairement pas déclarée : elle introduit les en-têtes
+// de routage Mcp-Method / Mcp-Name et un cadre d'extensions qui n'ont pas été
+// vérifiés ici. Un client plus récent reste servi en 2025-11-25.
+const SUPPORTED_PROTOCOL_VERSIONS = [
+  "2024-11-05",
+  "2025-03-26",
+  "2025-06-18",
+  "2025-11-25",
+];
 const FALLBACK_PROTOCOL_VERSION = "2024-11-05";
 
 const TOOLS = [
