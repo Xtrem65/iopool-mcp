@@ -23,7 +23,7 @@ Dans l'application mobile iopool : **Plus > Réglages > Clé API**.
 
 ## Configuration du connecteur MCP
 
-- **URL du endpoint** : `https://<votre-deploiement>.vercel.app/api/mcp`
+- **URL du endpoint** : `https://iopool-mcp.vercel.app/api/mcp`
 - **En-tête d'authentification** : `Authorization: Bearer <votre_cle_api_iopool>`
 - **Repli accepté** : `x-iopool-api-key: <votre_cle_api_iopool>`
 
@@ -34,7 +34,7 @@ Dans **Paramètres > Connecteurs > Ajouter un connecteur personnalisé** :
 | Champ | Valeur |
 |---|---|
 | Nom | `iopool` |
-| URL | `https://<votre-deploiement>.vercel.app/api/mcp` |
+| URL | `https://iopool-mcp.vercel.app/api/mcp` |
 | En-tête | `Authorization` → `Bearer <votre_cle_api_iopool>` |
 
 ### Fichier de configuration MCP (clients type `mcp.json`)
@@ -44,7 +44,7 @@ Dans **Paramètres > Connecteurs > Ajouter un connecteur personnalisé** :
   "mcpServers": {
     "iopool": {
       "type": "http",
-      "url": "https://<votre-deploiement>.vercel.app/api/mcp",
+      "url": "https://iopool-mcp.vercel.app/api/mcp",
       "headers": {
         "Authorization": "Bearer VOTRE_CLE_API_IOPOOL"
       }
@@ -57,12 +57,12 @@ Dans **Paramètres > Connecteurs > Ajouter un connecteur personnalisé** :
 
 ```bash
 # Liste des outils (aucune clé nécessaire)
-curl -s https://<votre-deploiement>.vercel.app/api/mcp \
+curl -s https://iopool-mcp.vercel.app/api/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 
 # Appel réel avec votre clé
-curl -s https://<votre-deploiement>.vercel.app/api/mcp \
+curl -s https://iopool-mcp.vercel.app/api/mcp \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $IOPOOL_API_KEY" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_pools","arguments":{}}}'
