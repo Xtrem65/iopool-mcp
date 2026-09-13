@@ -23,9 +23,7 @@ Dans l'application mobile iopool : **Plus > Réglages > Clé API**.
 
 ## Configuration du connecteur MCP
 
-Deux méthodes d'authentification, selon ce que votre client MCP sait faire.
-
-### Méthode A — en-tête (recommandée)
+L'authentification se fait par en-tête HTTP.
 
 - **URL** : `https://iopool-mcp.vercel.app/api/mcp`
 - **En-tête** : `Authorization: Bearer <votre_cle_api_iopool>`
@@ -71,23 +69,6 @@ claude mcp add --transport http iopool https://iopool-mcp.vercel.app/api/mcp \
 }
 ```
 
-### Méthode B — clé dans l'URL
-
-Pour les clients qui ne permettent pas d'en-tête personnalisé — c'est le cas
-des **connecteurs personnalisés de claude.ai**, dont le formulaire ne propose
-que Nom, URL et OAuth :
-
-- **URL** : `https://iopool-mcp.vercel.app/api/mcp/<votre_cle_api_iopool>`
-
-Rien d'autre à configurer, laissez l'option OAuth désactivée.
-
-> ⚠️ Une clé dans une URL est moins discrète qu'un en-tête : elle apparaît
-> dans les journaux de requêtes de l'hébergeur et dans l'historique du
-> navigateur, et elle part avec le lien si vous le partagez par inadvertance.
-> Ne partagez jamais cette URL complète — partagez `https://iopool-mcp.vercel.app/api/mcp`
-> et laissez chacun ajouter sa propre clé. En cas de doute, régénérez votre
-> clé dans l'application iopool.
-
 ### Vérifier en ligne de commande
 
 ```bash
@@ -96,16 +77,11 @@ curl -s https://iopool-mcp.vercel.app/api/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 
-# Appel réel avec votre clé (en-tête)
+# Appel réel avec votre clé
 curl -s https://iopool-mcp.vercel.app/api/mcp \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $IOPOOL_API_KEY" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_pools","arguments":{}}}'
-
-# Appel réel avec votre clé (dans l'URL)
-curl -s "https://iopool-mcp.vercel.app/api/mcp/$IOPOOL_API_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_pools","arguments":{}}}'
 ```
 
 ## Confidentialité
@@ -129,8 +105,7 @@ Aucune variable d'environnement n'est nécessaire.
 | Route | Rôle |
 |---|---|
 | `GET /` | Endpoint de santé |
-| `POST /api/mcp` | Endpoint MCP (JSON-RPC), clé dans l'en-tête |
-| `POST /api/mcp/<cle>` | Idem, clé dans l'URL (clients sans en-tête) |
+| `POST /api/mcp` | Endpoint MCP (JSON-RPC) |
 
 ## Licence
 

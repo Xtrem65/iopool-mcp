@@ -4,8 +4,6 @@
 // (par ordre de préférence) :
 //   1. en-tête "Authorization: Bearer <cle>"   — Claude Code, Claude Desktop
 //   2. en-tête "x-iopool-api-key: <cle>"       — repli
-//   3. dans l'URL : POST /api/mcp/<cle>        — pour les clients MCP qui ne
-//      permettent pas d'en-tête personnalisé (connecteurs claude.ai)
 //
 // Aucune clé n'est stockée ni journalisée côté serveur : elle est simplement
 // relayée vers l'API iopool le temps de l'appel.
@@ -58,14 +56,6 @@ function extractApiKey(req) {
 
   const custom = req.headers["x-iopool-api-key"];
   if (custom) return firstValue(custom);
-
-  // La réécriture vercel.json transforme /api/mcp/<cle> en /api/mcp?k=<cle>.
-  const fromQuery = req.query && req.query.k;
-  if (fromQuery) return firstValue(fromQuery);
-
-  // Repli si la requête arrive sans passer par la réécriture.
-  const match = /\/api\/mcp\/([^/?#]+)/.exec(req.url || "");
-  if (match) return decodeURIComponent(match[1]);
 
   return null;
 }
@@ -150,9 +140,7 @@ module.exports = async (req, res) => {
                   type: "text",
                   text:
                     "Clé API iopool manquante. Configure l'en-tête " +
-                    "'Authorization: Bearer <ta_cle_api>' dans ton client MCP, " +
-                    "ou utilise l'URL /api/mcp/<ta_cle_api> si ton client ne " +
-                    "permet pas d'en-tête personnalisé.",
+                    "'Authorization: Bearer <ta_cle_api>' dans ton client MCP.",
                 },
               ],
               isError: true,
