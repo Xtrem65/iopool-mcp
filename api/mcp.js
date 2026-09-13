@@ -1,12 +1,16 @@
 // Serveur MCP distant pour iopool — https://api.iopool.com
 //
-// Chaque utilisateur fournit sa propre clé API iopool, de trois façons
-// (par ordre de préférence) :
-//   1. en-tête "Authorization: Bearer <cle>"   — Claude Code, Claude Desktop
-//   2. en-tête "x-iopool-api-key: <cle>"       — repli
+// Deux façons de s'authentifier, toutes deux via l'en-tête Authorization :
+//   1. OAuth — "Bearer <jeton>" obtenu via /oauth/authorize. Le jeton contient
+//      la clé iopool chiffrée (voir lib/token.js). C'est la seule méthode que
+//      les connecteurs personnalisés de claude.ai savent utiliser.
+//   2. Clé directe — "Bearer <cle_api_iopool>", ou "x-iopool-api-key: <cle>".
+//      Pratique pour Claude Code, Claude Desktop et curl.
 //
-// Aucune clé n'est stockée ni journalisée côté serveur : elle est simplement
-// relayée vers l'API iopool le temps de l'appel.
+// Aucune clé n'est stockée ni journalisée côté serveur : elle est relayée vers
+// l'API iopool le temps de l'appel, puis oubliée.
+
+const { unseal, isConfigured } = require("../lib/token");
 
 const IOPOOL_BASE_URL = "https://api.iopool.com/v1";
 
@@ -51,13 +55,38 @@ function firstValue(value) {
 function extractApiKey(req) {
   const auth = req.headers["authorization"];
   if (auth && auth.toLowerCase().startsWith("bearer ")) {
-    return auth.slice(7).trim();
+    const bearer = auth.slice(7).trim();
+    // Un jeton OAuth émis par ce serveur contient la clé iopool chiffrée.
+    // S'il ne se déchiffre pas, c'est que l'appelant a passé sa clé iopool
+    // directement : les deux usages restent valides.
+    if (isConfigured()) {
+      const claims = unseal(bearer);
+      if (claims && claims.t === "access" && claims.k) return claims.k;
+    }
+    return bearer;
   }
 
   const custom = req.headers["x-iopool-api-key"];
   if (custom) return firstValue(custom);
 
   return null;
+}
+
+// Indique au client MCP où trouver le serveur d'autorisation (RFC 9728),
+// ce qui déclenche le parcours OAuth dans les connecteurs claude.ai.
+function requireAuth(req, res) {
+  const host = req.headers["x-forwarded-host"] || req.headers["host"];
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  res.setHeader(
+    "WWW-Authenticate",
+    `Bearer realm="iopool-mcp", ` +
+      `resource_metadata="${proto}://${host}/.well-known/oauth-protected-resource"`
+  );
+  res.status(401).json({
+    jsonrpc: "2.0",
+    id: null,
+    error: { code: -32001, message: "Authentification requise." },
+  });
 }
 
 async function callIopool(path, apiKey) {
@@ -98,6 +127,14 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // Quand OAuth est configuré, toute requête non authentifiée reçoit un 401 :
+  // c'est ce qui déclenche la découverte puis le parcours OAuth côté client.
+  const apiKey = extractApiKey(req);
+  if (!apiKey && isConfigured()) {
+    requireAuth(req, res);
+    return;
+  }
+
   const body = req.body || {};
   const { id = null, method, params = {} } = body;
 
@@ -119,7 +156,7 @@ module.exports = async (req, res) => {
           jsonRpcResult(id, {
             protocolVersion,
             capabilities: { tools: {} },
-            serverInfo: { name: "iopool-mcp", version: "1.1.0" },
+            serverInfo: { name: "iopool-mcp", version: "2.0.0" },
           })
         );
         return;
@@ -131,7 +168,6 @@ module.exports = async (req, res) => {
       }
 
       case "tools/call": {
-        const apiKey = extractApiKey(req);
         if (!apiKey) {
           res.status(200).json(
             jsonRpcResult(id, {
