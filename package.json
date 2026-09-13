@@ -1,0 +1,9 @@
+{
+  "name": "iopool-mcp",
+  "version": "1.0.0",
+  "description": "Serveur MCP distant pour consulter les données de piscine iopool (pH, ORP, température, filtration).",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
