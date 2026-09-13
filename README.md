@@ -100,6 +100,11 @@ Ce dépôt est réutilisable tel quel. Connectez-le à un projet Vercel, puis :
 Sans `TOKEN_SECRET`, les endpoints OAuth renvoient une erreur explicite et
 seule l'authentification par en-tête fonctionne.
 
+Pour vérifier que la variable est bien prise en compte, appelez la racine :
+`GET /` renvoie `"oauth": "configured"` une fois qu'elle est en place. Une
+variable ajoutée après le dernier déploiement n'est pas visible tant que le
+projet n'a pas été redéployé.
+
 ### Endpoints OAuth exposés
 
 | Route | Rôle |
